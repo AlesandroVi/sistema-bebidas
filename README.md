@@ -42,6 +42,7 @@ La conexión usa por defecto la configuración de XAMPP (`root` sin contraseña)
 ├── resumen.php           # Resumen del pedido confirmado
 ├── agregar_producto.php  # Alta de productos
 ├── includes/db.php       # Conexión a la base de datos
+├── includes/funciones.php # Formato de precios y escape de HTML
 ├── assets/style.css      # Estilos
 └── database.sql          # Estructura y datos de ejemplo
 ```

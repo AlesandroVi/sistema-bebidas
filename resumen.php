@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/funciones.php';
 
 $pedido_id = isset($_GET['pedido']) ? (int)$_GET['pedido'] : 0;
 if ($pedido_id === 0) {
@@ -10,19 +11,26 @@ if ($pedido_id === 0) {
 
 $conn = conectar();
 
-$res = $conn->query("SELECT * FROM pedidos WHERE id = $pedido_id");
-$pedido = $res->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ?");
+$stmt->bind_param("i", $pedido_id);
+$stmt->execute();
+$pedido = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$pedido) {
     header("Location: index.php");
     exit;
 }
 
-$detalle = $conn->query(
+$stmt = $conn->prepare(
     "SELECT pd.*, b.nombre, b.emoji FROM pedido_detalle pd
      JOIN bebidas b ON pd.bebida_id = b.id
-     WHERE pd.pedido_id = $pedido_id"
+     WHERE pd.pedido_id = ?"
 );
+$stmt->bind_param("i", $pedido_id);
+$stmt->execute();
+$detalle = $stmt->get_result();
+$stmt->close();
 
 $conn->close();
 ?>
@@ -33,6 +41,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedido confirmado — Bebidas</title>
     <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
 </head>
 <body>
 
@@ -43,7 +52,7 @@ $conn->close();
             <span class="logo-icon">🍺</span>
             <span class="logo-text">Bebidas</span>
         </div>
-        <div style="width:140px;"></div>
+        <div class="espaciador" aria-hidden="true"></div>
     </div>
 </header>
 
@@ -72,18 +81,18 @@ $conn->close();
                 <?= htmlspecialchars($item['emoji']) ?> <?= htmlspecialchars($item['nombre']) ?>
             </span>
             <span><?= $item['cantidad'] ?></span>
-            <span>$<?= number_format($item['precio_unitario'], 0, ',', '.') ?></span>
-            <span class="col-subtotal">$<?= number_format($item['subtotal'], 0, ',', '.') ?></span>
+            <span><?= precio($item['precio_unitario']) ?></span>
+            <span class="col-subtotal"><?= precio($item['subtotal']) ?></span>
         </div>
         <?php endwhile; ?>
 
         <div class="fila-total-final">
             <span>Total del pedido</span>
-            <span>$<?= number_format($pedido['total'], 0, ',', '.') ?></span>
+            <span><?= precio($pedido['total']) ?></span>
         </div>
     </div>
 
-    <div class="acciones-carrito" style="justify-content:center;">
+    <div class="acciones-carrito acciones-centradas">
         <a href="index.php" class="btn-primario">Hacer otro pedido</a>
     </div>
 

@@ -554,6 +554,23 @@ button, input {
     font-size: 1.1rem;
 }
 
+.espaciador {
+    width: 140px;
+}
+
+.carrito-vacio .carrito-vacio-icono {
+    font-size: 48px;
+    margin: 0;
+}
+
+.carrito-vacio .btn-primario {
+    margin-top: 18px;
+}
+
+.acciones-centradas {
+    justify-content: center;
+}
+
 /* Foco visible para navegar con teclado (el reset de arriba quitaba el outline) */
 a:focus-visible,
 button:focus-visible,
@@ -564,15 +581,11 @@ select:focus-visible {
 }
 
 @media (max-width: 840px) {
-    .tabla-header,
-    .tabla-fila {
-        grid-template-columns: 2fr 1fr 1fr auto;
+    .tabla-carrito .tabla-header,
+    .tabla-carrito .tabla-fila {
+        grid-template-columns: 2fr 1fr 1.4fr 1fr auto;
     }
 
-    .tabs-header,
-    .tabs-fila {
-        gap: 10px;
-    }
 }
 
 @media (max-width: 720px) {
@@ -596,9 +609,21 @@ select:focus-visible {
         align-items: stretch;
     }
 
-    .tabla-header,
-    .tabla-fila,
-    .fila-total {
-        grid-template-columns: 2fr 1fr auto;
+    /* En celulares cada producto pasa a ser una tarjeta de dos columnas */
+    .tabla-header {
+        display: none;
+    }
+
+    .tabla-carrito .tabla-fila,
+    .tabla-resumen .tabla-fila {
+        grid-template-columns: 1fr auto;
+    }
+
+    .tabla-fila .col-nombre {
+        grid-column: 1 / -1;
+    }
+
+    .espaciador {
+        display: none;
     }
 }

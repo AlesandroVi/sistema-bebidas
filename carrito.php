@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/funciones.php';
 
 if (!isset($_SESSION['carrito'])) {
     $_SESSION['carrito'] = [];
@@ -46,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'emoji'    => $bebida['emoji'],
                 'precio'   => (float)$bebida['precio'],
                 'cantidad' => $nueva,
+                'stock'    => (int)$bebida['stock'],
                 'subtotal' => $bebida['precio'] * $nueva,
             ];
         }
@@ -67,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $_SESSION['carrito'][$id]['cantidad'] = $qty;
                 $_SESSION['carrito'][$id]['precio']   = (float)$bebida['precio'];
+                $_SESSION['carrito'][$id]['stock']    = (int)$bebida['stock'];
                 $_SESSION['carrito'][$id]['subtotal'] = $bebida['precio'] * $qty;
             }
         }
@@ -169,6 +172,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tu pedido — Bebidas</title>
     <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
 </head>
 <body>
 
@@ -179,7 +183,7 @@ $conn->close();
             <span class="logo-icon">🍺</span>
             <span class="logo-text">Bebidas</span>
         </div>
-        <div style="width:140px;"></div>
+        <div class="espaciador" aria-hidden="true"></div>
     </div>
 </header>
 
@@ -193,7 +197,7 @@ $conn->close();
 
     <?php if (empty($_SESSION['carrito'])): ?>
         <div class="carrito-vacio">
-            <p style="font-size:48px; margin:0;">🛒</p>
+            <p class="carrito-vacio-icono" aria-hidden="true">🛒</p>
             <p>No tenés productos en tu pedido.</p>
             <a href="index.php" class="btn-primario">Ver catálogo</a>
         </div>
@@ -214,17 +218,17 @@ $conn->close();
                 <span class="col-nombre">
                     <?= htmlspecialchars($item['emoji']) ?> <?= htmlspecialchars($item['nombre']) ?>
                 </span>
-                <span class="col-precio">$<?= number_format($item['precio'], 0, ',', '.') ?></span>
+                <span class="col-precio"><?= precio($item['precio']) ?></span>
                 <span class="col-cantidad">
                     <form action="carrito.php" method="POST" class="form-inline">
                         <input type="hidden" name="accion" value="actualizar">
                         <input type="hidden" name="bebida_id" value="<?= $id ?>">
-                        <button type="button" class="btn-cant-sm" onclick="cambiarCant(this,-1)">−</button>
-                        <input type="number" name="cantidad" value="<?= $item['cantidad'] ?>" min="1" class="input-cant-sm" onchange="this.form.submit()">
-                        <button type="button" class="btn-cant-sm" onclick="cambiarCant(this,1)">+</button>
+                        <button type="button" class="btn-cant-sm" onclick="cambiarCant(this,-1)" aria-label="Restar uno">−</button>
+                        <input type="number" name="cantidad" value="<?= $item['cantidad'] ?>" min="1" <?= isset($item['stock']) ? 'max="' . $item['stock'] . '"' : '' ?> class="input-cant-sm" aria-label="Cantidad de <?= e($item['nombre']) ?>" onchange="this.form.submit()">
+                        <button type="button" class="btn-cant-sm" onclick="cambiarCant(this,1)" aria-label="Sumar uno">+</button>
                     </form>
                 </span>
-                <span class="col-subtotal">$<?= number_format($item['subtotal'], 0, ',', '.') ?></span>
+                <span class="col-subtotal"><?= precio($item['subtotal']) ?></span>
                 <span class="col-quitar">
                     <form action="carrito.php" method="POST">
                         <input type="hidden" name="accion" value="quitar">
@@ -244,7 +248,7 @@ $conn->close();
             </div>
             <div class="fila-total grande">
                 <span>Total:</span>
-                <span>$<?= number_format($total, 0, ',', '.') ?></span>
+                <span><?= precio($total) ?></span>
             </div>
         </div>
 
@@ -268,7 +272,10 @@ $conn->close();
 function cambiarCant(btn, delta) {
     const input = btn.parentElement.querySelector('input[name="cantidad"]');
     let val = (parseInt(input.value) || 1) + delta;
+    const max = parseInt(input.max);
     if (val < 1) val = 1;
+    if (max && val > max) val = max;
+    if (val === parseInt(input.value)) return;
     input.value = val;
     input.form.submit();
 }

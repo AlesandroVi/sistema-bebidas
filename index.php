@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/funciones.php';
 
 // Inicializar carrito en sesión
 if (!isset($_SESSION['carrito'])) {
@@ -14,14 +15,16 @@ $categorias = $conn->query("SELECT * FROM categorias ORDER BY nombre");
 
 // Obtener bebidas (con filtro de categoría si se aplica)
 $filtro_cat = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
-$sql = "SELECT b.*, c.nombre AS categoria FROM bebidas b 
-        LEFT JOIN categorias c ON b.categoria_id = c.id 
-        WHERE b.activo = 1";
-if ($filtro_cat > 0) {
-    $sql .= " AND b.categoria_id = $filtro_cat";
-}
-$sql .= " ORDER BY c.nombre, b.nombre";
-$bebidas = $conn->query($sql);
+$stmt = $conn->prepare(
+    "SELECT b.*, c.nombre AS categoria FROM bebidas b
+     LEFT JOIN categorias c ON b.categoria_id = c.id
+     WHERE b.activo = 1 AND (? = 0 OR b.categoria_id = ?)
+     ORDER BY c.nombre, b.nombre"
+);
+$stmt->bind_param("ii", $filtro_cat, $filtro_cat);
+$stmt->execute();
+$bebidas = $stmt->get_result();
+$stmt->close();
 
 $conn->close();
 
@@ -43,6 +46,7 @@ foreach ($_SESSION['carrito'] as $item) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bebidas — Pedidos</title>
     <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
 </head>
 <body>
 
@@ -92,10 +96,10 @@ foreach ($_SESSION['carrito'] as $item) {
             $en_carrito = isset($_SESSION['carrito'][$b['id']]) ? $_SESSION['carrito'][$b['id']]['cantidad'] : 0;
         ?>
         <div class="card-bebida <?= $sin_stock ? 'sin-stock' : '' ?>">
-            <div class="card-emoji" aria-hidden="true"><?= htmlspecialchars($b['emoji']) ?></div>
+            <div class="card-emoji" aria-hidden="true"><?= e($b['emoji'] ?: '🥤') ?></div>
             <h2 class="card-nombre"><?= htmlspecialchars($b['nombre']) ?></h2>
             <div class="card-categoria"><?= htmlspecialchars($b['categoria']) ?></div>
-            <div class="card-precio">$<?= number_format($b['precio'], 0, ',', '.') ?></div>
+            <div class="card-precio"><?= precio($b['precio']) ?></div>
 
             <?php if ($sin_stock): ?>
                 <span class="badge-stock rojo">Sin stock</span>
@@ -129,7 +133,7 @@ foreach ($_SESSION['carrito'] as $item) {
 <?php if ($total_carrito > 0): ?>
 <div class="barra-total">
     <span><?= $items_carrito ?> producto<?= $items_carrito != 1 ? 's' : '' ?></span>
-    <strong>Total: $<?= number_format($total_carrito, 0, ',', '.') ?></strong>
+    <strong>Total: <?= precio($total_carrito) ?></strong>
     <a href="carrito.php" class="btn-ver-pedido">Ver pedido →</a>
 </div>
 <?php endif; ?>
