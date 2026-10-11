@@ -1,10 +1,13 @@
 <?php
-session_start();
+require_once 'includes/sesion.php';
 require_once 'includes/db.php';
 require_once 'includes/funciones.php';
 
 $pedido_id = isset($_GET['pedido']) ? (int)$_GET['pedido'] : 0;
-if ($pedido_id === 0) {
+
+// Solo se muestra si el pedido lo hizo este comprador (antes cualquiera podía
+// ver los pedidos de otros cambiando el número en la dirección)
+if ($pedido_id === 0 || !in_array($pedido_id, $_SESSION['mis_pedidos'] ?? [], true)) {
     header("Location: index.php");
     exit;
 }

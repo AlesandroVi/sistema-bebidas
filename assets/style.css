@@ -571,6 +571,245 @@ button, input {
     justify-content: center;
 }
 
+/* Pie de página de la tienda: el acceso del personal queda discreto */
+.pie {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    width: min(1120px, calc(100% - 32px));
+    margin: 0 auto 90px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.pie-acceso {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+.pie-acceso:hover {
+    color: #475569;
+    text-decoration: underline;
+}
+
+/* Inicio de sesión del panel */
+.pagina-login {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.login-caja {
+    width: min(400px, 100%);
+    text-align: center;
+}
+
+.login-logo {
+    font-size: 3rem;
+}
+
+.login-caja h1 {
+    margin: 8px 0 4px;
+    font-size: 1.5rem;
+}
+
+.login-ayuda {
+    margin: 0 0 20px;
+    color: #64748b;
+}
+
+.login-form {
+    text-align: left;
+}
+
+.login-form .btn-primario {
+    justify-self: stretch;
+}
+
+.login-volver {
+    display: inline-block;
+    margin-top: 18px;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.formulario-producto input[type="password"] {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.15);
+    background: #fff;
+    font: inherit;
+}
+
+/* Encabezado y navegación del panel */
+.header-admin {
+    background: #0f172a;
+}
+
+.nav-admin {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.nav-admin a {
+    padding: 8px 14px;
+    border-radius: 999px;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.nav-admin a:hover,
+.nav-admin a.activo {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.form-logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-usuario {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.btn-chico {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    border: none;
+}
+
+.link-volver {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #4661b8;
+    font-weight: 600;
+}
+
+/* Tarjetas con el resumen del día */
+.tarjetas-resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.tarjeta-dato {
+    display: grid;
+    gap: 4px;
+    padding: 18px 20px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+}
+
+.tarjeta-dato.alerta {
+    background: #fff7e0;
+}
+
+.dato-valor {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.dato-label {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.barra-titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.barra-titulo .titulo-pagina {
+    margin: 0;
+}
+
+/* Tablas del panel */
+.tabla-admin-contenedor {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 26px 40px rgba(15, 23, 42, 0.08);
+}
+
+.tabla-admin {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 640px;
+}
+
+.tabla-admin th,
+.tabla-admin td {
+    padding: 14px 18px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.tabla-admin thead th {
+    background: #f3f6fb;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.tabla-admin tbody tr {
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.tabla-admin tr.inactivo td {
+    color: #94a3b8;
+}
+
+.tabla-admin .num {
+    text-align: right;
+}
+
+.acciones-fila {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.lista-detalle {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.fila-campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.acciones-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
 /* Foco visible para navegar con teclado (el reset de arriba quitaba el outline) */
 a:focus-visible,
 button:focus-visible,
@@ -625,5 +864,15 @@ select:focus-visible {
 
     .espaciador {
         display: none;
+    }
+
+    /* En el panel el encabezado ocupa mucho en celulares: deja de quedar fijo arriba */
+    .header-admin {
+        position: static;
+    }
+
+    /* En celulares la barra del total es más alta: se deja lugar para que no tape el pie */
+    .pie {
+        margin-bottom: 200px;
     }
 }

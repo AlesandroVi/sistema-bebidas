@@ -40,6 +40,14 @@ CREATE TABLE IF NOT EXISTS pedido_detalle (
     FOREIGN KEY (bebida_id) REFERENCES bebidas(id)
 );
 
+-- Usuarios del panel de administración (la clave se guarda con password_hash).
+-- Para crear el primero: php crear_admin.php
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(50) NOT NULL UNIQUE,
+    clave_hash VARCHAR(255) NOT NULL
+);
+
 -- Datos de ejemplo: categorías
 INSERT INTO categorias (nombre) VALUES
 ('Gaseosas'),

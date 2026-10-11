@@ -1,0 +1,3 @@
+# Los archivos de esta carpeta solo se incluyen desde otras páginas:
+# no tienen que poder abrirse directamente desde el navegador.
+Require all denied

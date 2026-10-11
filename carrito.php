@@ -1,11 +1,8 @@
 <?php
-session_start();
+require_once 'includes/sesion.php';
 require_once 'includes/db.php';
 require_once 'includes/funciones.php';
 
-if (!isset($_SESSION['carrito'])) {
-    $_SESSION['carrito'] = [];
-}
 
 $conn = conectar();
 
@@ -137,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $conn->commit();
             $_SESSION['carrito'] = [];
+            $_SESSION['mis_pedidos'][] = $pedido_id;
             header("Location: resumen.php?pedido=$pedido_id");
             exit;
         } catch (RuntimeException $e) {

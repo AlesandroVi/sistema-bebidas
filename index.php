@@ -1,12 +1,8 @@
 <?php
-session_start();
+require_once 'includes/sesion.php';
 require_once 'includes/db.php';
 require_once 'includes/funciones.php';
 
-// Inicializar carrito en sesión
-if (!isset($_SESSION['carrito'])) {
-    $_SESSION['carrito'] = [];
-}
 
 $conn = conectar();
 
@@ -58,7 +54,6 @@ foreach ($_SESSION['carrito'] as $item) {
             <span class="logo-text">Bebidas</span>
         </div>
         <div class="header-actions">
-            <a href="agregar_producto.php" class="btn-primario">+ Agregar producto</a>
             <a href="carrito.php" class="btn-carrito">
                 🛒 Ver pedido
                 <?php if ($items_carrito > 0): ?>
@@ -70,9 +65,6 @@ foreach ($_SESSION['carrito'] as $item) {
 </header>
 
 <main class="container">
-    <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'producto_agregado'): ?>
-        <div class="alert-success">Producto agregado correctamente.</div>
-    <?php endif; ?>
     <?php if ($aviso): ?>
         <div class="alert-error"><?= htmlspecialchars($aviso) ?></div>
     <?php endif; ?>
@@ -128,6 +120,11 @@ foreach ($_SESSION['carrito'] as $item) {
     </div>
 
 </main>
+
+<footer class="pie">
+    <span>© <?= date('Y') ?> Bebidas · Pedidos online</span>
+    <a href="admin/login.php" class="pie-acceso" rel="nofollow">Acceso del personal</a>
+</footer>
 
 <!-- BARRA DE TOTAL FLOTANTE -->
 <?php if ($total_carrito > 0): ?>

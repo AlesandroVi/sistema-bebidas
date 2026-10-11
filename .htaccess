@@ -1,0 +1,13 @@
+# Archivos que no se sirven por web (script de consola, base de datos, documentación interna)
+<FilesMatch "^(crear_admin\.php|database\.sql|README\.md|\.gitignore)$">
+    Require all denied
+</FilesMatch>
+
+# Las páginas del panel no deben aparecer en buscadores
+<IfModule mod_headers.c>
+    <If "%{REQUEST_URI} =~ m#/admin/#">
+        Header set X-Robots-Tag "noindex, nofollow"
+    </If>
+</IfModule>
+
+Options -Indexes
