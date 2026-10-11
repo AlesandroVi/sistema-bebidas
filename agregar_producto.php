@@ -20,6 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($nombre === '') {
         $errores[] = 'El nombre es obligatorio.';
+    } elseif (mb_strlen($nombre) > 150) {
+        $errores[] = 'El nombre no puede tener más de 150 caracteres.';
+    }
+    if (mb_strlen($emoji) > 10) {
+        $errores[] = 'El emoji no puede tener más de 10 caracteres.';
     }
     if ($precio === false || $precio < 0) {
         $errores[] = 'El precio debe ser un número válido mayor o igual a 0.';
@@ -32,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errores)) {
+        // Sin emoji, se usa uno genérico para que la tarjeta no quede vacía
+        if ($emoji === '') {
+            $emoji = '🥤';
+        }
         $stmt = $conn->prepare(
             "INSERT INTO bebidas (nombre, precio, stock, categoria_id, emoji, activo) VALUES (?, ?, ?, ?, ?, ?)"
         );
@@ -85,7 +94,7 @@ $conn->close();
     <form action="agregar_producto.php" method="POST" class="formulario-producto">
         <label>
             Nombre
-            <input type="text" name="nombre" value="<?= htmlspecialchars($_POST['nombre'] ?? '') ?>" required>
+            <input type="text" name="nombre" maxlength="150" value="<?= htmlspecialchars($_POST['nombre'] ?? '') ?>" required>
         </label>
 
         <label>
@@ -113,11 +122,11 @@ $conn->close();
 
         <label>
             Emoji
-            <input type="text" name="emoji" value="<?= htmlspecialchars($_POST['emoji'] ?? '') ?>" placeholder="Opcional">
+            <input type="text" name="emoji" maxlength="10" value="<?= htmlspecialchars($_POST['emoji'] ?? '') ?>" placeholder="Opcional (ej: 🥤)">
         </label>
 
         <label class="label-checkbox">
-            <input type="checkbox" name="activo" value="1" <?= isset($_POST['activo']) ? 'checked' : 'checked' ?>>
+            <input type="checkbox" name="activo" value="1" <?= $_SERVER['REQUEST_METHOD'] !== 'POST' || isset($_POST['activo']) ? 'checked' : '' ?>>
             Producto activo
         </label>
 

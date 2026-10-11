@@ -1,5 +1,5 @@
 -- Crear base de datos
-CREATE DATABASE IF NOT EXISTS bebidas_db CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS bebidas_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE bebidas_db;
 
 -- Tabla de categorías
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS bebidas (
     precio DECIMAL(10,2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
     categoria_id INT,
-    emoji VARCHAR(10) DEFAULT 'bebida',
+    emoji VARCHAR(10) DEFAULT '🥤',
     activo TINYINT(1) DEFAULT 1,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id)
 );
@@ -50,18 +50,18 @@ INSERT INTO categorias (nombre) VALUES
 
 -- Datos de ejemplo: bebidas
 INSERT INTO bebidas (nombre, precio, stock, categoria_id, emoji) VALUES
-('Coca-Cola 500ml',    1200.00, 24, 1, 'bebida'),
-('Sprite 500ml',       1100.00, 18, 1, 'bebida'),
-('Fanta 500ml',        1100.00,  6, 1, 'bebida'),
-('Pepsi 500ml',        1100.00, 15, 1, 'bebida'),
-('Agua mineral 500ml',  700.00, 30, 2, 'bebida'),
-('Agua con gas 500ml',  800.00, 12, 2, 'bebida'),
-('Cerveza Quilmes',    1800.00, 12, 3, 'cerveza'),
-('Cerveza Brahma',     2000.00,  5, 3, 'cerveza'),
-('Cerveza Stella',     2200.00,  0, 3, 'cerveza'),
-('Cerveza Heineken',   2500.00,  8, 3, 'cerveza'),
-('Jugo Cepita 1L',     1500.00,  9, 4, 'jugo'),
-('Jugo Tang 1L',       1300.00,  3, 4, 'jugo'),
-('Jugo Ades 1L',       1400.00,  7, 4, 'jugo'),
-('Gatorade',           1600.00,  4, 5, 'energizante'),
-('Powerade',           1550.00,  5, 5, 'energizante');
+('Coca-Cola 500ml',    1200.00, 24, 1, '🥤'),
+('Sprite 500ml',       1100.00, 18, 1, '🥤'),
+('Fanta 500ml',        1100.00,  6, 1, '🥤'),
+('Pepsi 500ml',        1100.00, 15, 1, '🥤'),
+('Agua mineral 500ml',  700.00, 30, 2, '💧'),
+('Agua con gas 500ml',  800.00, 12, 2, '💧'),
+('Cerveza Quilmes',    1800.00, 12, 3, '🍺'),
+('Cerveza Brahma',     2000.00,  5, 3, '🍺'),
+('Cerveza Stella',     2200.00,  0, 3, '🍺'),
+('Cerveza Heineken',   2500.00,  8, 3, '🍺'),
+('Jugo Cepita 1L',     1500.00,  9, 4, '🧃'),
+('Jugo Tang 1L',       1300.00,  3, 4, '🧃'),
+('Jugo Ades 1L',       1400.00,  7, 4, '🧃'),
+('Gatorade',           1600.00,  4, 5, '⚡'),
+('Powerade',           1550.00,  5, 5, '⚡');

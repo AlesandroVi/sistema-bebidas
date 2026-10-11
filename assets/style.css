@@ -397,6 +397,172 @@ button, input {
     font-size: 1rem;
 }
 
+/* Títulos y navegación */
+.titulo-pagina {
+    margin: 0 0 20px;
+    font-size: 1.6rem;
+    color: #0f172a;
+}
+
+.logo-text {
+    letter-spacing: 0.02em;
+}
+
+.header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-volver {
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.btn-volver:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+/* Mensajes */
+.alert-success,
+.alert-error {
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    font-weight: 600;
+}
+
+.alert-success {
+    background: #e7f6ec;
+    color: #1e6b3a;
+}
+
+.alert-error {
+    background: #fce8e6;
+    color: #b02a16;
+}
+
+.alert-error ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+/* Cantidades dentro del carrito */
+.form-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-cant-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #f3f6fb;
+    color: #1f2937;
+    cursor: pointer;
+}
+
+.input-cant-sm {
+    width: 56px;
+    padding: 6px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+/* Formulario de alta de producto */
+.formulario-producto {
+    display: grid;
+    gap: 16px;
+    background: #fff;
+    padding: 24px;
+    border-radius: 24px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+}
+
+.formulario-producto label {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.formulario-producto input[type="text"],
+.formulario-producto input[type="number"],
+.formulario-producto select {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.15);
+    background: #fff;
+    font: inherit;
+}
+
+.formulario-producto .label-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.formulario-producto .btn-primario {
+    justify-self: start;
+    border: none;
+}
+
+/* Pedido confirmado */
+.resumen-confirmado {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.check-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 12px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e7f6ec;
+    color: #1e6b3a;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.titulo-confirmado {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.subtitulo-confirmado {
+    margin: 6px 0 0;
+    color: #64748b;
+}
+
+.tabla-resumen .tabla-header,
+.tabla-resumen .tabla-fila,
+.tabla-resumen .fila-total-final {
+    grid-template-columns: 3fr 1fr 1fr 1fr;
+}
+
+.fila-total-final {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Foco visible para navegar con teclado (el reset de arriba quitaba el outline) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid #4661b8;
+    outline-offset: 2px;
+}
+
 @media (max-width: 840px) {
     .tabla-header,
     .tabla-fila {

@@ -20,6 +20,7 @@ function conectar()
         die('Error de conexión: ' . $conn->connect_error);
     }
 
-    $conn->set_charset('utf8');
+    // utf8mb4 permite guardar emojis (utf8 de MySQL solo admite 3 bytes por carácter)
+    $conn->set_charset('utf8mb4');
     return $conn;
 }

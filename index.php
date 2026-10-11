@@ -25,6 +25,9 @@ $bebidas = $conn->query($sql);
 
 $conn->close();
 
+$aviso = $_SESSION['aviso'] ?? '';
+unset($_SESSION['aviso']);
+
 // Calcular total del carrito
 $total_carrito = 0;
 $items_carrito = 0;
@@ -66,13 +69,16 @@ foreach ($_SESSION['carrito'] as $item) {
     <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'producto_agregado'): ?>
         <div class="alert-success">Producto agregado correctamente.</div>
     <?php endif; ?>
+    <?php if ($aviso): ?>
+        <div class="alert-error"><?= htmlspecialchars($aviso) ?></div>
+    <?php endif; ?>
 
     <!-- FILTRO CATEGORÍAS -->
     <div class="filtros">
         <a href="index.php" class="filtro-btn <?= $filtro_cat === 0 ? 'activo' : '' ?>">Todas</a>
         <?php while ($cat = $categorias->fetch_assoc()): ?>
             <a href="?cat=<?= $cat['id'] ?>" 
-               class="filtro-btn <?= $filtro_cat === $cat['id'] ? 'activo' : '' ?>">
+               class="filtro-btn <?= $filtro_cat === (int)$cat['id'] ? 'activo' : '' ?>">
                 <?= htmlspecialchars($cat['nombre']) ?>
             </a>
         <?php endwhile; ?>
@@ -86,7 +92,7 @@ foreach ($_SESSION['carrito'] as $item) {
             $en_carrito = isset($_SESSION['carrito'][$b['id']]) ? $_SESSION['carrito'][$b['id']]['cantidad'] : 0;
         ?>
         <div class="card-bebida <?= $sin_stock ? 'sin-stock' : '' ?>">
-            <div class="card-emoji"><?= $b['emoji'] ?></div>
+            <div class="card-emoji" aria-hidden="true"><?= htmlspecialchars($b['emoji']) ?></div>
             <h2 class="card-nombre"><?= htmlspecialchars($b['nombre']) ?></h2>
             <div class="card-categoria"><?= htmlspecialchars($b['categoria']) ?></div>
             <div class="card-precio">$<?= number_format($b['precio'], 0, ',', '.') ?></div>
@@ -104,9 +110,9 @@ foreach ($_SESSION['carrito'] as $item) {
                 <input type="hidden" name="accion" value="agregar">
                 <input type="hidden" name="bebida_id" value="<?= $b['id'] ?>">
                 <div class="control-cantidad">
-                    <button type="button" class="btn-cant" onclick="cambiarCant(this, -1)">−</button>
+                    <button type="button" class="btn-cant" onclick="cambiarCant(this, -1)" aria-label="Restar uno">−</button>
                     <input type="number" name="cantidad" value="1" min="1" max="<?= $b['stock'] ?>" class="input-cant">
-                    <button type="button" class="btn-cant" onclick="cambiarCant(this, 1, <?= $b['stock'] ?>)">+</button>
+                    <button type="button" class="btn-cant" onclick="cambiarCant(this, 1, <?= $b['stock'] ?>)" aria-label="Sumar uno">+</button>
                 </div>
                 <button type="submit" class="btn-agregar <?= $en_carrito > 0 ? 'en-carrito' : '' ?>">
                     <?= $en_carrito > 0 ? "✓ En pedido ($en_carrito)" : 'Agregar' ?>
@@ -131,7 +137,7 @@ foreach ($_SESSION['carrito'] as $item) {
 <script>
 function cambiarCant(btn, delta, max) {
     const input = btn.parentElement.querySelector('.input-cant');
-    let val = parseInt(input.value) + delta;
+    let val = (parseInt(input.value) || 1) + delta;
     if (val < 1) val = 1;
     if (max && val > max) val = max;
     input.value = val;

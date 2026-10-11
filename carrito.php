@@ -8,38 +8,67 @@ if (!isset($_SESSION['carrito'])) {
 
 $conn = conectar();
 
+// Mensaje que se muestra una sola vez después de redirigir
+function avisar($texto)
+{
+    $_SESSION['aviso'] = $texto;
+}
+
+// Datos actuales de una bebida activa, o null si no existe
+function buscar_bebida($conn, $id)
+{
+    $stmt = $conn->prepare("SELECT id, nombre, emoji, precio, stock FROM bebidas WHERE id = ? AND activo = 1");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $bebida = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $bebida;
+}
+
 // --- ACCIONES POST ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? '';
+    $id     = (int)($_POST['bebida_id'] ?? 0);
+    $qty    = max(1, (int)($_POST['cantidad'] ?? 1));
 
-    // Agregar producto al carrito
+    // Agregar producto al carrito (se suma a lo que ya había, sin superar el stock)
     if ($accion === 'agregar') {
-        $id  = (int)$_POST['bebida_id'];
-        $qty = max(1, (int)$_POST['cantidad']);
-
-        $res = $conn->query("SELECT * FROM bebidas WHERE id = $id AND activo = 1 AND stock > 0");
-        if ($bebida = $res->fetch_assoc()) {
-            $qty = min($qty, $bebida['stock']);
+        $bebida = buscar_bebida($conn, $id);
+        if ($bebida && $bebida['stock'] > 0) {
+            $previa = $_SESSION['carrito'][$id]['cantidad'] ?? 0;
+            $nueva  = min($previa + $qty, (int)$bebida['stock']);
+            if ($nueva < $previa + $qty) {
+                avisar("Solo hay {$bebida['stock']} unidades de {$bebida['nombre']}.");
+            }
             $_SESSION['carrito'][$id] = [
-                'id'       => $bebida['id'],
+                'id'       => (int)$bebida['id'],
                 'nombre'   => $bebida['nombre'],
                 'emoji'    => $bebida['emoji'],
-                'precio'   => $bebida['precio'],
-                'cantidad' => $qty,
-                'subtotal' => $bebida['precio'] * $qty,
+                'precio'   => (float)$bebida['precio'],
+                'cantidad' => $nueva,
+                'subtotal' => $bebida['precio'] * $nueva,
             ];
         }
         header("Location: index.php");
         exit;
     }
 
-    // Actualizar cantidad desde el carrito
+    // Actualizar cantidad desde el carrito (sin superar el stock)
     if ($accion === 'actualizar') {
-        $id  = (int)$_POST['bebida_id'];
-        $qty = max(1, (int)$_POST['cantidad']);
         if (isset($_SESSION['carrito'][$id])) {
-            $_SESSION['carrito'][$id]['cantidad'] = $qty;
-            $_SESSION['carrito'][$id]['subtotal']  = $_SESSION['carrito'][$id]['precio'] * $qty;
+            $bebida = buscar_bebida($conn, $id);
+            if (!$bebida || $bebida['stock'] <= 0) {
+                unset($_SESSION['carrito'][$id]);
+                avisar("Ese producto ya no está disponible y se quitó del pedido.");
+            } else {
+                if ($qty > $bebida['stock']) {
+                    $qty = (int)$bebida['stock'];
+                    avisar("Solo hay {$bebida['stock']} unidades de {$bebida['nombre']}.");
+                }
+                $_SESSION['carrito'][$id]['cantidad'] = $qty;
+                $_SESSION['carrito'][$id]['precio']   = (float)$bebida['precio'];
+                $_SESSION['carrito'][$id]['subtotal'] = $bebida['precio'] * $qty;
+            }
         }
         header("Location: carrito.php");
         exit;
@@ -47,52 +76,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Quitar un producto
     if ($accion === 'quitar') {
-        $id = (int)$_POST['bebida_id'];
         unset($_SESSION['carrito'][$id]);
         header("Location: carrito.php");
         exit;
     }
 
-    // Confirmar pedido
-    if ($accion === 'confirmar') {
-        if (!empty($_SESSION['carrito'])) {
-            $total = array_sum(array_column($_SESSION['carrito'], 'subtotal'));
+    // Vaciar el pedido
+    if ($accion === 'vaciar') {
+        $_SESSION['carrito'] = [];
+        header("Location: carrito.php");
+        exit;
+    }
 
-            // Insertar pedido
+    // Confirmar pedido: se guarda todo o nada, dentro de una transacción
+    if ($accion === 'confirmar' && !empty($_SESSION['carrito'])) {
+        $conn->begin_transaction();
+        try {
+            $items = [];
+            $total = 0;
+
+            // Se vuelven a leer precio y stock desde la base (bloqueando las filas)
+            // para no confiar en datos viejos guardados en la sesión
+            $stmt = $conn->prepare("SELECT nombre, precio, stock FROM bebidas WHERE id = ? AND activo = 1 FOR UPDATE");
+            foreach ($_SESSION['carrito'] as $item) {
+                $stmt->bind_param("i", $item['id']);
+                $stmt->execute();
+                $bebida = $stmt->get_result()->fetch_assoc();
+                if (!$bebida || $bebida['stock'] < $item['cantidad']) {
+                    $disponible = $bebida ? $bebida['stock'] : 0;
+                    throw new RuntimeException("No hay stock suficiente de {$item['nombre']} (quedan $disponible).");
+                }
+                $subtotal = $bebida['precio'] * $item['cantidad'];
+                $items[]  = [$item['id'], $item['cantidad'], (float)$bebida['precio'], $subtotal];
+                $total   += $subtotal;
+            }
+            $stmt->close();
+
             $stmt = $conn->prepare("INSERT INTO pedidos (total) VALUES (?)");
             $stmt->bind_param("d", $total);
             $stmt->execute();
             $pedido_id = $stmt->insert_id;
             $stmt->close();
 
-            // Insertar detalle y actualizar stock
-            foreach ($_SESSION['carrito'] as $item) {
-                $stmt = $conn->prepare(
-                    "INSERT INTO pedido_detalle (pedido_id, bebida_id, cantidad, precio_unitario, subtotal) 
-                     VALUES (?, ?, ?, ?, ?)"
-                );
-                $stmt->bind_param("iiidd", $pedido_id, $item['id'], $item['cantidad'], $item['precio'], $item['subtotal']);
-                $stmt->execute();
-                $stmt->close();
-
-                // Descontar stock
-                $conn->query("UPDATE bebidas SET stock = stock - {$item['cantidad']} WHERE id = {$item['id']}");
+            $detalle = $conn->prepare(
+                "INSERT INTO pedido_detalle (pedido_id, bebida_id, cantidad, precio_unitario, subtotal)
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            $descontar = $conn->prepare("UPDATE bebidas SET stock = stock - ? WHERE id = ?");
+            foreach ($items as [$bebida_id, $cantidad, $precio, $subtotal]) {
+                $detalle->bind_param("iiidd", $pedido_id, $bebida_id, $cantidad, $precio, $subtotal);
+                $detalle->execute();
+                $descontar->bind_param("ii", $cantidad, $bebida_id);
+                $descontar->execute();
             }
+            $detalle->close();
+            $descontar->close();
 
-            $_SESSION['ultimo_pedido'] = $pedido_id;
+            $conn->commit();
             $_SESSION['carrito'] = [];
             header("Location: resumen.php?pedido=$pedido_id");
             exit;
+        } catch (RuntimeException $e) {
+            $conn->rollback();
+            avisar($e->getMessage());
+        } catch (mysqli_sql_exception $e) {
+            $conn->rollback();
+            avisar("No se pudo confirmar el pedido. Intentá de nuevo.");
         }
+        header("Location: carrito.php");
+        exit;
     }
-}
 
-// Vaciar carrito
-if (isset($_GET['vaciar'])) {
-    $_SESSION['carrito'] = [];
     header("Location: carrito.php");
     exit;
 }
+
+$aviso = $_SESSION['aviso'] ?? '';
+unset($_SESSION['aviso']);
 
 // Calcular total
 $total = 0;
@@ -127,6 +187,10 @@ $conn->close();
 
     <h1 class="titulo-pagina">🛒 Tu pedido</h1>
 
+    <?php if ($aviso): ?>
+        <div class="alert-error"><?= htmlspecialchars($aviso) ?></div>
+    <?php endif; ?>
+
     <?php if (empty($_SESSION['carrito'])): ?>
         <div class="carrito-vacio">
             <p style="font-size:48px; margin:0;">🛒</p>
@@ -148,7 +212,7 @@ $conn->close();
             <?php foreach ($_SESSION['carrito'] as $id => $item): ?>
             <div class="tabla-fila">
                 <span class="col-nombre">
-                    <?= $item['emoji'] ?> <?= htmlspecialchars($item['nombre']) ?>
+                    <?= htmlspecialchars($item['emoji']) ?> <?= htmlspecialchars($item['nombre']) ?>
                 </span>
                 <span class="col-precio">$<?= number_format($item['precio'], 0, ',', '.') ?></span>
                 <span class="col-cantidad">
@@ -165,7 +229,7 @@ $conn->close();
                     <form action="carrito.php" method="POST">
                         <input type="hidden" name="accion" value="quitar">
                         <input type="hidden" name="bebida_id" value="<?= $id ?>">
-                        <button type="submit" class="btn-quitar" title="Quitar">✕</button>
+                        <button type="submit" class="btn-quitar" title="Quitar" aria-label="Quitar <?= htmlspecialchars($item['nombre']) ?>">✕</button>
                     </form>
                 </span>
             </div>
@@ -186,8 +250,10 @@ $conn->close();
 
         <!-- ACCIONES -->
         <div class="acciones-carrito">
-            <a href="carrito.php?vaciar=1" class="btn-secundario" 
-               onclick="return confirm('¿Vaciar el pedido?')">Vaciar pedido</a>
+            <form action="carrito.php" method="POST" onsubmit="return confirm('¿Vaciar el pedido?')">
+                <input type="hidden" name="accion" value="vaciar">
+                <button type="submit" class="btn-secundario">Vaciar pedido</button>
+            </form>
             <form action="carrito.php" method="POST">
                 <input type="hidden" name="accion" value="confirmar">
                 <button type="submit" class="btn-primario">Confirmar pedido →</button>
@@ -201,7 +267,7 @@ $conn->close();
 <script>
 function cambiarCant(btn, delta) {
     const input = btn.parentElement.querySelector('input[name="cantidad"]');
-    let val = parseInt(input.value) + delta;
+    let val = (parseInt(input.value) || 1) + delta;
     if (val < 1) val = 1;
     input.value = val;
     input.form.submit();

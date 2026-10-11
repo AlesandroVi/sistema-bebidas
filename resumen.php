@@ -69,7 +69,7 @@ $conn->close();
         <?php while ($item = $detalle->fetch_assoc()): ?>
         <div class="tabla-fila">
             <span class="col-nombre">
-                <?= $item['emoji'] ?> <?= htmlspecialchars($item['nombre']) ?>
+                <?= htmlspecialchars($item['emoji']) ?> <?= htmlspecialchars($item['nombre']) ?>
             </span>
             <span><?= $item['cantidad'] ?></span>
             <span>$<?= number_format($item['precio_unitario'], 0, ',', '.') ?></span>
